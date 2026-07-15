@@ -7,7 +7,7 @@ app.use(express.json({ limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-const MODEL = 'claude-sonnet-4-6';
+const MODEL = 'claude-sonnet-5';
 
 const SHORT_URL = 'https://app.notion.com/p/skelar/398fe0c4a15b8004a9efe1c346faedc7';
 const FULL_URL = 'https://app.notion.com/p/skelar/575fe0c4a15b837a850c817b1eaddb56';
