@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SKELAR · Конструктор відмов</title>
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<style>
+:root{--red:#FD3433;--white:#FFFFFF;--blue-85:#222631;--blue-75:#3B404C;--blue-60:#616672;--neutral-97:#060607;--text-primary:rgba(255,255,255,0.95);--text-secondary:rgba(255,255,255,0.70);--text-tertiary:rgba(255,255,255,0.45);--border:rgba(255,255,255,0.07);--border-md:rgba(255,255,255,0.14);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--blue-85);color:var(--text-primary);font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:15px;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
+.page{max-width:740px;margin:0 auto;padding:2.5rem 1.5rem 6rem}
+.site-header{display:flex;align-items:center;gap:10px;margin-bottom:2.5rem}
+.logo-mark{width:28px;height:28px;background:var(--red);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.site-name{font-size:13px;font-weight:500;color:var(--text-secondary);letter-spacing:-0.01em}
+.site-name span{color:var(--text-primary)}
+.page-title{font-size:clamp(1.75rem,5vw,2.5rem);font-weight:500;letter-spacing:-0.03em;line-height:1.1;margin-bottom:.5rem}
+.page-sub{font-size:14px;color:var(--text-secondary);margin-bottom:2.5rem}
+.card{background:var(--blue-75);border-radius:16px;padding:1.5rem;margin-bottom:1rem;border:1px solid var(--border)}
+.card-label{font-size:10px;font-weight:500;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:7px 16px;border-radius:10px;font-size:13px;font-weight:500;border:1px solid var(--border-md);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;line-height:1.4;transition:all .13s;letter-spacing:-0.01em}
+.chip:hover{color:var(--text-primary);border-color:rgba(255,255,255,0.3)}
+.chip.sel{background:var(--red);border-color:var(--red);color:#fff}
+.chip.danger{border-color:rgba(253,52,51,0.4);color:rgba(253,52,51,0.8)}
+.chip.danger.sel{background:var(--red);border-color:var(--red);color:#fff}
+.chip.danger:hover{border-color:var(--red);color:var(--red)}
+.subchips{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);display:none}
+.subchips.show{display:block}
+.subchips-label{font-size:11px;color:var(--text-tertiary);margin-bottom:.625rem}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:520px){.row2{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:.375rem}
+.field-label{font-size:12px;color:var(--text-secondary);font-weight:500}
+.field-hint{font-size:11px;color:var(--text-tertiary)}
+.input,.textarea{width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border-md);background:rgba(255,255,255,0.05);color:var(--text-primary);font-family:inherit;font-size:14px;font-weight:400;outline:none;transition:border-color .15s}
+.input:focus,.textarea:focus{border-color:rgba(255,255,255,0.35)}
+.input::placeholder,.textarea::placeholder{color:var(--text-tertiary)}
+.textarea{resize:vertical}
+.ai-badge{display:none;align-items:center;gap:6px;background:rgba(253,52,51,0.12);border:1px solid rgba(253,52,51,0.25);border-radius:8px;padding:8px 12px;font-size:12px;color:rgba(253,52,51,0.9);margin-top:.75rem}
+.ai-badge.show{display:flex}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0}
+.tone-chip{padding:5px 12px;border-radius:8px;font-size:12px}
+.btn-primary{width:100%;padding:15px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;letter-spacing:-0.01em;transition:opacity .15s,transform .1s;margin-top:.5rem}
+.btn-primary:hover{opacity:.88}.btn-primary:active{transform:scale(.99)}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-secondary{width:100%;padding:12px;background:transparent;color:var(--text-secondary);border:1px solid var(--border-md);border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;letter-spacing:-0.01em;transition:all .15s;margin-top:.5rem}
+.btn-secondary:hover{background:rgba(255,255,255,0.05);color:var(--text-primary)}
+.btn-secondary:disabled{opacity:.35;cursor:not-allowed}
+.loading-bar{height:2px;background:rgba(253,52,51,0.2);border-radius:1px;overflow:hidden;margin-top:1.25rem;display:none}
+.loading-bar.show{display:block}
+.loading-fill{height:100%;background:var(--red);border-radius:1px;animation:loadpulse 1.4s ease-in-out infinite}
+@keyframes loadpulse{0%{width:0%;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0%;margin-left:100%}}
+.loading-text{font-size:12px;color:var(--text-tertiary);text-align:center;margin-top:.5rem;display:none}
+.error-box{background:rgba(253,52,51,0.1);border:1px solid rgba(253,52,51,0.3);border-radius:10px;padding:10px 14px;font-size:13px;color:rgba(253,52,51,0.9);margin-top:.875rem;display:none}
+.error-box.show{display:block}
+.result-card{background:var(--blue-75);border-radius:16px;overflow:hidden;border:1px solid var(--border);margin-bottom:1rem;margin-top:1.5rem}
+.result-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.03)}
+.result-tag{font-size:11px;font-weight:500;color:rgba(253,52,51,0.9);background:rgba(253,52,51,0.12);padding:4px 10px;border-radius:6px;border:1px solid rgba(253,52,51,0.2)}
+.result-tag.ai-tag{color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.12)}
+.copy-btn{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);background:rgba(255,255,255,0.07);border:1px solid var(--border-md);border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;transition:all .12s}
+.copy-btn:hover{background:rgba(255,255,255,0.12);color:var(--text-primary)}
+.result-body{padding:1.25rem 1.5rem}
+.result-text{font-size:14px;font-weight:400;line-height:1.9;color:var(--text-primary);white-space:pre-wrap;word-break:break-word}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text-tertiary);font-size:14px;margin-top:1.5rem}
+.empty-icon{font-size:28px;margin-bottom:.5rem;opacity:.6}
+
+.tabs{display:flex;gap:6px;background:var(--blue-75);border:1px solid var(--border);border-radius:14px;padding:5px;margin-bottom:2rem}
+.tab-btn{flex:1;padding:10px 14px;border:none;background:transparent;color:var(--text-secondary);font-family:inherit;font-size:13px;font-weight:500;letter-spacing:-0.01em;border-radius:10px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:7px}
+.tab-btn.active{background:var(--red);color:#fff}
+.tab-btn:not(.active):hover{color:var(--text-primary)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+.suggest-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:1rem}
+.suggest-chip{padding:7px 14px;border-radius:10px;font-size:12.5px;font-weight:500;border:1px solid var(--border-md);background:rgba(255,255,255,0.03);color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .13s;text-align:left}
+.suggest-chip:hover{color:var(--text-primary);border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.06)}
+
+.chat-scroll{display:flex;flex-direction:column;gap:1rem;margin-bottom:1.25rem}
+.chat-msg{max-width:88%;font-size:14px;line-height:1.75}
+.chat-msg.user{align-self:flex-end;background:var(--red);color:#fff;padding:11px 16px;border-radius:14px 14px 3px 14px;font-weight:500}
+.chat-msg.assistant{align-self:flex-start;background:var(--blue-75);border:1px solid var(--border);padding:14px 16px;border-radius:14px 14px 14px 3px;color:var(--text-primary);white-space:pre-wrap;word-break:break-word}
+.chat-msg.assistant.pending{color:var(--text-tertiary)}
+.chat-src{font-size:10px;color:var(--text-tertiary);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);letter-spacing:.03em;text-transform:uppercase}
+.composer{display:flex;gap:8px;align-items:flex-end;position:sticky;bottom:0;background:var(--blue-85);padding-top:.5rem}
+.composer textarea{flex:1;resize:none;padding:12px 14px;border-radius:12px;border:1px solid var(--border-md);background:rgba(255,255,255,0.05);color:var(--text-primary);font-family:inherit;font-size:14px;outline:none;min-height:46px;max-height:140px}
+.composer textarea:focus{border-color:rgba(255,255,255,0.35)}
+.composer textarea::placeholder{color:var(--text-tertiary)}
+.send-btn{flex-shrink:0;width:46px;height:46px;background:var(--red);border:none;border-radius:12px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .15s}
+.send-btn:hover{opacity:.88}
+.send-btn:disabled{opacity:.35;cursor:not-allowed}
+.disclaimer{font-size:11px;color:var(--text-tertiary);margin-top:.75rem;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="site-header">
+    <div style="display:flex;align-items:center;gap:8px">
+      <svg width="90" height="20" viewBox="0 0 90 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <text x="0" y="16" font-family="Inter,system-ui,sans-serif" font-weight="600" font-size="17" letter-spacing="-0.03em" fill="white">SKELAR</text>
+      </svg>
+    </div>
+    <div class="site-name" style="color:rgba(255,255,255,0.45)">&middot; Recruitment Tools</div>
+  </div>
+  <h1 class="page-title">Recruitment Tools</h1>
+  <p class="page-sub">Внутрішні інструменти SKELAR для наймаючих менеджерів та рекрутерів.</p>
+
+  <div class="tabs" id="tabs">
+    <button class="tab-btn active" data-tab="rejection">✉️ Конструктор відмов</button>
+    <button class="tab-btn" data-tab="assistant">💬 Асистент для НМ</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-rejection">
+  <p class="page-sub" style="margin-top:-.5rem">Генерує відмову на основі готових шаблонів. AI підключається тільки для персоналізації.</p>
+
+  <div class="card">
+    <div class="card-label">Стиль та персоналізація</div>
+    <div class="field" style="margin-bottom:1rem">
+      <div class="field-label">Tone of voice</div>
+      <div class="chips" id="tone">
+        <button class="chip tone-chip sel" data-v="warm">Warm</button>
+        <button class="chip tone-chip" data-v="formal">Formal</button>
+        <button class="chip tone-chip" data-v="informal">Informal</button>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <div class="field-label">Стать кандидата</div>
+        <div class="field-hint">Якщо не обрано — подвійні форми</div>
+        <div class="chips" style="margin-top:.5rem" id="cand-gender">
+          <button class="chip tone-chip" data-v="female">Жінка</button>
+          <button class="chip tone-chip" data-v="male">Чоловік</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Стать рекрутера / НМ</div>
+        <div class="field-hint">Хто пише від себе</div>
+        <div class="chips" style="margin-top:.5rem" id="rec-gender">
+          <button class="chip tone-chip" data-v="female">Жінка</button>
+          <button class="chip tone-chip" data-v="male">Чоловік</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Причина відмови *</div>
+    <div class="chips" id="reason">
+      <button class="chip" data-v="not_looking">Reject after network</button>
+      <button class="chip" data-v="working_conditions">Working conditions</button>
+      <button class="chip" data-v="another_candidate">Another candidate selected</button>
+      <button class="chip" data-v="motivation_mismatch">Motivation mismatch</button>
+      <button class="chip" data-v="cultural_fit">Not a cultural fit</button>
+      <button class="chip" data-v="overqualified">Over-qualified</button>
+      <button class="chip" data-v="role_on_hold">Role on hold / cancelled</button>
+      <button class="chip" data-v="salary_mismatch">Salary expectations mismatch</button>
+      <button class="chip" data-v="underqualified">Under-qualified</button>
+      <button class="chip" data-v="business_oriented">Business orientation</button>
+      <button class="chip" data-v="test_failed">Test task failed</button>
+      <button class="chip danger" data-v="toxic">Toxic &#9888;&#65039;</button>
+    </div>
+    <div class="subchips" id="sub-network">
+      <div class="subchips-label">Уточни формат</div>
+      <div class="chips" id="network-sub">
+        <button class="chip" data-v="pure_network">Просто нетворк</button>
+        <button class="chip" data-v="interested_no_role">Кандидат зацікавлений, але немає ролі</button>
+      </div>
+    </div>
+    <div class="subchips" id="sub-working">
+      <div class="subchips-label">Уточни умову</div>
+      <div class="chips" id="working-sub">
+        <button class="chip" data-v="remote">Remote формат</button>
+        <button class="chip" data-v="shifts">Графік / зміни</button>
+        <button class="chip" data-v="employment">Форма зайнятості</button>
+      </div>
+    </div>
+    <div class="subchips" id="sub-another">
+      <div class="subchips-label">Уточни ситуацію</div>
+      <div class="chips" id="another-sub">
+        <button class="chip" data-v="cancel_meeting">Скасування зустрічі</button>
+        <button class="chip" data-v="after_interview">Після проведених співбесід</button>
+      </div>
+    </div>
+    <div class="subchips" id="sub-motivation">
+      <div class="subchips-label">Уточни причину</div>
+      <div class="chips" id="motivation-sub">
+        <button class="chip" data-v="stability">Шукає стабільність, а не швидкий темп</button>
+        <button class="chip" data-v="other_motivation">Інше — напишу в контексті</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Деталі</div>
+    <div class="row2" style="margin-bottom:1rem">
+      <div class="field">
+        <div class="field-label">Позиція кандидата</div>
+        <input class="input" id="position" placeholder="Наприклад: Product Manager"/>
+      </div>
+      <div class="field" id="hm-wrap" style="display:none">
+        <div class="field-label">Коментар HM по тестовому *</div>
+        <input class="input" id="hm-comment" placeholder="Що саме не так з виконанням"/>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:1rem">
+      <div class="field-label">Сильні сторони кандидата</div>
+      <div class="field-hint">Опційно — якщо заповнено, зʼявиться кнопка AI</div>
+      <textarea class="textarea" id="strengths" rows="2" placeholder="Що реально вразило" oninput="checkAiFields()"></textarea>
+    </div>
+    <div class="field">
+      <div class="field-label">Зони росту</div>
+      <div class="field-hint">Опційно — буде подано мʼяко</div>
+      <textarea class="textarea" id="growth" rows="2" placeholder="Що варто розвивати" oninput="checkAiFields()"></textarea>
+    </div>
+    <div class="ai-badge" id="ai-badge">
+      <span class="ai-dot"></span>Поля заповнені — доступна персоналізація з AI
+    </div>
+  </div>
+
+  <button class="btn-primary" id="gen-btn" onclick="generate(false)">Згенерувати відмову</button>
+  <div class="error-box" id="error-box"></div>
+  <div class="loading-bar" id="loading-bar"><div class="loading-fill"></div></div>
+  <div class="loading-text" id="loading-text"></div>
+  <div id="results"><div class="empty-state"><div class="empty-icon">&#9997;&#65039;</div>Обери причину та натисни кнопку</div></div>
+  </div>
+
+  <div class="tab-panel" id="tab-assistant">
+    <p class="page-sub" style="margin-top:-.5rem">Задай питання про процес найму, Ashby, інтерв'ю, оффер чи будь-яку іншу ситуацію — відповім на основі бази знань SKELAR для наймаючих менеджерів.</p>
+
+    <div class="card">
+      <div class="card-label">Чат</div>
+      <div class="chat-scroll" id="chat-scroll"></div>
+      <div class="suggest-row" id="suggest-row">
+        <button class="suggest-chip" data-q="Скільки часу займе пошук кандидата?">Скільки часу займе пошук кандидата?</button>
+        <button class="suggest-chip" data-q="Що таке bar-raising і чи обов'язковий він для моєї ролі?">Що таке bar-raising?</button>
+        <button class="suggest-chip" data-q="Кандидат торгується по зарплаті — що робити?">Кандидат торгується по ЗП — що робити?</button>
+        <button class="suggest-chip" data-q="Як заповнювати фідбек в Ashby після інтерв'ю?">Як заповнювати фідбек в Ashby?</button>
+      </div>
+      <div class="composer" style="margin-top:1.25rem">
+        <textarea id="chat-input" rows="1" placeholder="Напиши своє питання..." onkeydown="handleChatKey(event)"></textarea>
+        <button class="send-btn" id="chat-send" onclick="sendChat()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
+        </button>
+      </div>
+      <div class="error-box" id="chat-error"></div>
+      <p class="disclaimer">Відповіді формуються AI на основі внутрішньої бази знань SKELAR і можуть бути неповними. Для важливих рішень — звіряйся з рекрутером.</p>
+    </div>
+  </div>
+
+</div>
+<script>
+var T={
+not_looking:{
+  headers:["Дякую за цікаву розмову та можливість познайомитися ближче! Було приємно поспілкуватися та дізнатись про твій досвід.","Щиро дякую за приємне знайомство та таку відкриту, теплу розмову! Було надзвичайно цікаво дізнатися більше про твій шлях та професійні орієнтири.","Дякую за чудову розмову та за те, що поділився/-лася своїм досвідом і думками. Спілкування з тобою пройшло на одному диханні.","Дякую за приділений час та такий легкий і приємний діалог, було суперцікаво поспілкуватися."],
+  bodies_pure:["Впевнена/-ий, що в майбутньому зможемо бути корисні один одному.","Навіть якщо прямо сьогодні ми не робимо наступних кроків у спільній роботі, це знайомство для мене дуже цінне. Я збережу твої контакти і буду тримати в голові твій профіль для майбутніх запусків та колаборацій.","Вірю, що кожне таке знайомство — це початок чогось більшого. Наразі ми не маємо активних пропозицій, але я переконана/-ий, що наші шляхи ще перетнуться.","Мені дуже відгукується твій стиль мислення. Буду рада/-ий відновити діалог, щойно з'явиться гарна нагода."],
+  bodies_interested:["Хочу бути чесною/-им: наразі в SKELAR немає відкритої ролі, яка б точно відповідала твоєму профілю та амбіціям. Це не нетворк «про всяк випадок» — мені дійсно цікаво тримати з тобою зв'язок, і як тільки з'явиться щось релевантне, я напишу першою/-им."],
+  footers:["Пропоную залишатися на зв'язку та обов'язково писати одне одному у разі запитань або ж нових інсайтів. Гарного тобі продовження дня і на зв'язку!","Давай не губитися. Якщо з'являться якісь ідеї чи питання — пиши без вагань.","Бажаю тобі крутих результатів у всьому, над чим зараз працюєш! На зв'язку.","Якщо помітиш цікаву статтю чи матимеш крутий інсайт, обов'язково ділися!"]
+},
+working_conditions:{
+  headers:["Дякую за цікаву розмову та час, який ти приділив/-ла знайомству з нами!","Щиро дякую за приємну бесіду та відкритість у розмові про твій досвід і очікування."],
+  bodies_remote:["Ми зрозуміли, що формат роботи, який пропонує ця роль, не зовсім співпадає з твоїми очікуваннями щодо remote — і це важливий сигнал, який варто чесно врахувати з обох боків."],
+  bodies_other:["Ми зрозуміли, що умови ролі (графік/формат зайнятості) наразі не збігаються з тим, що ти шукаєш — і це нормально, краще визначити це на старті, ніж вже в процесі роботи."],
+  footers:["Дякуємо за розуміння та відкритість! Будемо раді розглянути тебе на роль з умовами, які підійдуть краще.","Ще раз дякуємо за час. Якщо зʼявиться роль з іншими умовами — обовʼязково повернемось."]
+},
+another_cancel:{
+  headers:["Дякую, що знайшов/ла час для знайомства з нами!"],
+  bodies:["На жаль, наразі ми вирішили рухатись далі з іншим кандидатом і скасувати заплановану зустріч з тобою."],
+  footers:["Дякуємо за розуміння та бажаємо успіхів у пошуку!","Сподіваємось на майбутню співпрацю за інших обставин."]
+},
+another_after:{
+  headers:["Дякую за час та цікаву розмову під час наших зустрічей!"],
+  bodies:["Після ретельного розгляду ми вирішили продовжити роботу з іншим кандидатом, чий досвід трохи ближче відповідає поточним потребам ролі."],
+  footers:["Дуже цінуємо час, який ти інвестував/-ла у процес. Бажаємо успіхів!","Будемо раді тримати контакт на майбутнє."]
+},
+motivation_mismatch:{
+  headers:["Дякую за відкриту розмову про твої цілі та очікування!"],
+  bodies_stability:["Ми зрозуміли, що зараз тобі важливіша стабільність та передбачуваний темп роботи, тоді як наша роль передбачає швидкий і динамічний ритм."],
+  bodies_other:["Ми зрозуміли, що мотивація і те, що ти шукаєш у ролі, трохи відрізняється від того, що ми можемо запропонувати зараз."],
+  footers:["Дякуємо за чесність і час! Бажаємо знайти саме те, що резонує з твоїми цілями.","Ще раз дякуємо за розмову — успіхів у пошуку!"]
+},
+cultural_fit:{
+  headers:["Дякую за час, приділений знайомству з нами!"],
+  bodies:["Після зустрічі ми зрозуміли, що збіг з культурою команди та стилем роботи наразі не такий сильний, як нам би хотілось для цієї ролі."],
+  footers:["Дякуємо за розуміння та бажаємо знайти команду, яка стане ідеальним match!"]
+},
+overqualified:{
+  headers:["Дякую за цікаву розмову та детальний розгляд твого досвіду!"],
+  bodies:["Твій рівень експертизи виявився вищим за той, що потрібен для цієї конкретної ролі — і ми хочемо бути чесними щодо цього, а не пропонувати позицію, яка не розкриє твій потенціал."],
+  footers:["Дякуємо за час! Впевнені, що знайдеш роль, яка відповідатиме твоєму рівню."]
+},
+role_on_hold:{
+  headers:["Дякую за цікаву розмову та інтерес до ролі!"],
+  bodies:["На жаль, наразі вакансія призупинена/скасована з боку бізнесу, тому ми не можемо продовжити процес."],
+  footers:["Дуже шкода, що так склалось. Тримаємо твій профіль і повернемось, якщо ситуація зміниться!"]
+},
+salary_mismatch:{
+  headers:["Дякую за відкриту розмову про очікування щодо зарплати!"],
+  bodies:["На жаль, твої очікування щодо компенсації наразі виходять за межі вилки, затвердженої для цієї ролі, і ми не можемо її розширити."],
+  footers:["Дякуємо за розуміння! Якщо в майбутньому вилка зміниться — обовʼязково звʼяжемось."]
+},
+underqualified:{
+  headers:["Дякую за час та цікаву розмову!"],
+  bodies:["Ми зрозуміли, що поточний рівень досвіду трохи не дотягує до must-have вимог цієї ролі."],
+  footers:["Дякуємо за інтерес! Бажаємо успіхів у розвитку та пошуку відповідної ролі."]
+},
+business_oriented:{
+  headers:["Дякую за розмову та зацікавленість у ролі!"],
+  bodies:["Після обговорення з командою ми зрозуміли, що наразі шукаємо кандидата з трохи сильнішим бізнес-фокусом для закриття наших поточних потреб. Це було нелегке рішення, адже ти маєш багато сильних сторін, які ми високо оцінили."],
+  footers:["Ти справді класний(-а) кандидат(-ка), і я впевнена(-ий), що дуже скоро знайдеш ідеальну можливість для себе! Ми обов'язково будемо раді повернутися до розмови в майбутньому. Ще раз дякую за твою зацікавленість!","Ще раз дуже дякуємо тобі за час та інтерес до ролі, будемо раді повернутися до тебе в майбутньому та попрацювати разом ☀️","Однак, у нас багато різних портфельних компаній, які активно зростають, і ми впевнені, що в майбутньому може відкритися роль, яка ідеально відповідатиме твоєму досвіду та амбіціям. Обов'язково зв'яжемося, якщо з'явиться щось відповідне.","Я впевнена/-ий, що твої навички та досвід знайдуть своє застосування у відповідній ролі! Ми точно не прощаємось, а тільки відкладаємо наше спілкування — ми додали тебе в наш short list і як тільки з'явиться актуальна пропозиція, із задоволенням зв'яжемось!"]
+},
+test_failed:{
+  headers:["Повертаюсь до тебе з фідбеком після нашої співбесіди. Хочу подякувати тобі за час і відкритість під час розмови.","Дякую, що знайшов/ла час виконати тестове завдання — ми цінуємо твою залученість у процес та час, який ти на це витратив/-ла.","Повертаюсь з фідбеком по тестовому завданню. Дякую, що взявся/-лась за нього — ми розуміємо, що це потребує часу та зусиль."],
+  footers:["Дякуємо тобі за відкритість до процесу та витрачений час. Бажаємо успіхів у подальшому пошуку!","Ще раз дякуємо за участь у процесі. Будемо раді тримати тебе в нашій базі — якщо з'явиться роль, яка краще підходить під твій поточний рівень, обов'язково напишемо.","Дякуємо за час та зусилля. Пропоную залишатись на зв'язку — і можливо наші шляхи ще перетнуться."]
+},
+toxic:"Привіт!\nЯк і домовлялись, повертаюсь до тебе зі зворотним зв'язком 🙌 Щиро дякуємо тобі за проявлену зацікавленість до відкритої вакансії та за час, який ти приділив/-ла знайомству з нами. Ми були раді познайомитися та дізнатися більше про твій бекграунд та підхід до роботи.\n\nМи ретельно аналізуємо бекграунд кожного кандидата, щоб знайти найбільш оптимальне поєднання навичок і підходів, які б максимально відповідали потребам нашої компанії. У зв'язку з цим ми вирішили, що наразі не можемо запропонувати тобі продовження діалогу у розрізі наявної позиції.\n\nМи впевнені, що з твоїм рівнем професіоналізму та наполегливістю ти досягнеш великих успіхів у майбутньому. У разі появи позиції, яка більше відповідатиме твоїм сильним сторонам, ми будемо раді знову повернутися до спілкування. 🤗\nБажаємо тобі подальших успіхів та реалізації всіх професійних цілей!"
+};
+
+function applyGender(t,cg,rg){
+  function sr(text,find,rep){return text.split(find).join(rep);}
+  if(cg==='female'){
+    t=sr(t,'знайшов/ла','знайшла');t=sr(t,'знайшла/ов','знайшла');
+    t=sr(t,'знайшла(-ов)','знайшла');
+    t=sr(t,'поділився/лася','поділилася');t=sr(t,'поділився/-лася','поділилася');
+    t=sr(t,'поділився/-лась','поділилася');t=sr(t,'поділився(-лась)','поділилася');
+    t=sr(t,'поділилась(-вся)','поділилася');t=sr(t,'погодилась/вся','погодилася');
+    t=sr(t,'виділив/-ла','виділила');t=sr(t,'розповів/-ла','розповіла');
+    t=sr(t,'інвестував/-ла','інвестувала');t=sr(t,'приділив/-ла','приділила');
+    t=sr(t,'приділив(-ла)','приділила');t=sr(t,'взявся/-лась','взялася');
+    t=sr(t,'пройшов(-ла)','пройшла');t=sr(t,'витратив/-ла','витратила');
+    t=sr(t,'встиг/-ла','встигла');t=sr(t,'залишив/-ла','залишила');
+    t=sr(t,'залишила(-ив)','залишила');t=sr(t,'проявив/-ла','проявила');
+    t=sr(t,'проявила/ив','проявила');t=sr(t,'працював/-ла','працювала');
+    t=sr(t,'взявся/-лась','взялася');t=sr(t,'взяла/в','взяла');
+    t=sr(t,'вирішила/в','вирішила');t=sr(t,'вирішила/-в','вирішила');
+  } else if(cg==='male'){
+    t=sr(t,'знайшов/ла','знайшов');t=sr(t,'знайшла/ов','знайшов');
+    t=sr(t,'знайшла(-ов)','знайшов');
+    t=sr(t,'поділився/лася','поділився');t=sr(t,'поділився/-лася','поділився');
+    t=sr(t,'поділився/-лась','поділився');t=sr(t,'поділився(-лась)','поділився');
+    t=sr(t,'поділилась(-вся)','поділився');t=sr(t,'погодилась/вся','погодився');
+    t=sr(t,'виділив/-ла','виділив');t=sr(t,'розповів/-ла','розповів');
+    t=sr(t,'інвестував/-ла','інвестував');t=sr(t,'приділив/-ла','приділив');
+    t=sr(t,'приділив(-ла)','приділив');t=sr(t,'взявся/-лась','взявся');
+    t=sr(t,'пройшов(-ла)','пройшов');t=sr(t,'витратив/-ла','витратив');
+    t=sr(t,'встиг/-ла','встиг');t=sr(t,'залишив/-ла','залишив');
+    t=sr(t,'залишила(-ив)','залишив');t=sr(t,'проявив/-ла','проявив');
+    t=sr(t,'проявила/ив','проявив');t=sr(t,'працював/-ла','працював');
+    t=sr(t,'взявся/-лась','взявся');t=sr(t,'взяла/в','взяв');
+    t=sr(t,'вирішила/в','вирішив');t=sr(t,'вирішила/-в','вирішив');
+  }
+  if(rg==='female'){
+    t=sr(t,'Впевнена/-ий','Впевнена');t=sr(t,'впевнена/-ий','впевнена');
+    t=sr(t,'Впевнена/ий','Впевнена');t=sr(t,'впевнена/ий','впевнена');
+    t=sr(t,'впевнена(-ий)','впевнена');
+    t=sr(t,'Переконана/-ий','Переконана');t=sr(t,'переконана/-ий','переконана');
+    t=sr(t,'Переконана/ий','Переконана');t=sr(t,'переконана/ий','переконана');
+    t=sr(t,'Рада/-ий','Рада');t=sr(t,'рада/-ий','рада');
+    t=sr(t,'Рада/ий','Рада');t=sr(t,'рада/ий','рада');
+    t=sr(t,'Вдячна/-ий','Вдячна');t=sr(t,'вдячна/-ий','вдячна');
+    t=sr(t,'Чесною/-им','Чесною');t=sr(t,'чесною/-им','чесною');
+    t=sr(t,'Взяла/в','Взяла');t=sr(t,'взяла/в','взяла');
+    t=sr(t,'Хотіла/-в','Хотіла');t=sr(t,'хотіла/-в','хотіла');
+    t=sr(t,'Змушена/-ий','Змушена');t=sr(t,'змушена/-ий','змушена');
+    t=sr(t,'Відвертою/-им','Відвертою');t=sr(t,'відвертою/-им','відвертою');
+    t=sr(t,'Першою/-им','Першою');t=sr(t,'першою/-им','першою');
+    t=sr(t,'Класний/-а','Класна');t=sr(t,'класний/-а','класна');
+    t=sr(t,'Класний(-а)','Класна');t=sr(t,'класний(-а)','класна');
+    t=sr(t,'обіцяла/-в','обіцяла');t=sr(t,'обіцяла(-в)','обіцяла');
+    t=sr(t,'вирішила/в','вирішила');t=sr(t,'вирішила/-в','вирішила');
+    t=sr(t,'кандидат(-ка)','кандидатка');
+  } else if(rg==='male'){
+    t=sr(t,'Впевнена/-ий','Впевнений');t=sr(t,'впевнена/-ий','впевнений');
+    t=sr(t,'Впевнена/ий','Впевнений');t=sr(t,'впевнена/ий','впевнений');
+    t=sr(t,'впевнена(-ий)','впевнений');
+    t=sr(t,'Переконана/-ий','Переконаний');t=sr(t,'переконана/-ий','переконаний');
+    t=sr(t,'Переконана/ий','Переконаний');t=sr(t,'переконана/ий','переконаний');
+    t=sr(t,'Рада/-ий','Радий');t=sr(t,'рада/-ий','радий');
+    t=sr(t,'Рада/ий','Радий');t=sr(t,'рада/ий','радий');
+    t=sr(t,'Вдячна/-ий','Вдячний');t=sr(t,'вдячна/-ий','вдячний');
+    t=sr(t,'Чесною/-им','Чесним');t=sr(t,'чесною/-им','чесним');
+    t=sr(t,'Взяла/в','Взяв');t=sr(t,'взяла/в','взяв');
+    t=sr(t,'Хотіла/-в','Хотів');t=sr(t,'хотіла/-в','хотів');
+    t=sr(t,'Змушена/-ий','Змушений');t=sr(t,'змушена/-ий','змушений');
+    t=sr(t,'Відвертою/-им','Відвертим');t=sr(t,'відвертою/-им','відвертим');
+    t=sr(t,'Першою/-им','Першим');t=sr(t,'першою/-им','першим');
+    t=sr(t,'Класний/-а','Класний');t=sr(t,'класний/-а','класний');
+    t=sr(t,'Класний(-а)','Класний');t=sr(t,'класний(-а)','класний');
+    t=sr(t,'обіцяла/-в','обіцяв');t=sr(t,'обіцяла(-в)','обіцяв');
+    t=sr(t,'вирішила/в','вирішив');t=sr(t,'вирішила/-в','вирішив');
+    t=sr(t,'кандидат(-ка)','кандидат');
+  }
+  return t;
+}
+
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function getSelected(id){var e=document.querySelector('#'+id+' .sel');return e?e.dataset.v:null;}
+
+function buildStatic(){
+  var reason=getSelected('reason'),networkSub=getSelected('network-sub'),workingSub=getSelected('working-sub'),anotherSub=getSelected('another-sub'),motivSub=getSelected('motivation-sub'),cg=getSelected('cand-gender'),rg=getSelected('rec-gender'),position=document.getElementById('position').value.trim(),hmComment=document.getElementById('hm-comment').value.trim();
+  var h,b,f;
+  if(reason==='toxic') return applyGender(T.toxic,cg,rg);
+  if(reason==='not_looking'){h=pick(T.not_looking.headers);b=networkSub==='interested_no_role'?pick(T.not_looking.bodies_interested):pick(T.not_looking.bodies_pure);f=pick(T.not_looking.footers);}
+  else if(reason==='working_conditions'){h=pick(T.working_conditions.headers);b=workingSub==='remote'?pick(T.working_conditions.bodies_remote):pick(T.working_conditions.bodies_other);f=pick(T.working_conditions.footers);}
+  else if(reason==='another_candidate'){if(anotherSub==='cancel_meeting'){h=pick(T.another_cancel.headers);b=pick(T.another_cancel.bodies);f=pick(T.another_cancel.footers);}else{h=pick(T.another_after.headers);b=pick(T.another_after.bodies);f=pick(T.another_after.footers);}}
+  else if(reason==='motivation_mismatch'){h=pick(T.motivation_mismatch.headers);b=motivSub==='stability'?pick(T.motivation_mismatch.bodies_stability):pick(T.motivation_mismatch.bodies_other);f=pick(T.motivation_mismatch.footers);}
+  else if(reason==='cultural_fit'){h=pick(T.cultural_fit.headers);b=pick(T.cultural_fit.bodies);f=pick(T.cultural_fit.footers);}
+  else if(reason==='overqualified'){h=pick(T.overqualified.headers);b=pick(T.overqualified.bodies);f=pick(T.overqualified.footers);}
+  else if(reason==='role_on_hold'){h=pick(T.role_on_hold.headers);b=pick(T.role_on_hold.bodies);f=pick(T.role_on_hold.footers);}
+  else if(reason==='salary_mismatch'){h=pick(T.salary_mismatch.headers);b=pick(T.salary_mismatch.bodies);f=pick(T.salary_mismatch.footers);}
+  else if(reason==='underqualified'){h=pick(T.underqualified.headers);b=pick(T.underqualified.bodies);f=pick(T.underqualified.footers);}
+  else if(reason==='business_oriented'){h=pick(T.business_oriented.headers);b=pick(T.business_oriented.bodies);f=pick(T.business_oriented.footers);}
+  else if(reason==='test_failed'){h=pick(T.test_failed.headers);b='Після розгляду тестового завдання ми вирішили не продовжувати процес відбору на цю роль.\n\nФідбек від команди: '+hmComment;f=pick(T.test_failed.footers);}
+  else return null;
+  if(position){b=b.replace(/по цій вакансії/g,'по позиції '+position).replace(/цієї ролі/g,'ролі '+position);}
+  var text=', привіт!\n\n'+h+'\n\n'+b+'\n\n'+f;
+  return applyGender(text,cg,rg);
+}
+
+document.getElementById('reason').querySelectorAll('.chip').forEach(function(c){
+  c.addEventListener('click',function(){
+    document.getElementById('reason').querySelectorAll('.chip').forEach(function(x){x.classList.remove('sel');});
+    c.classList.add('sel');
+    ['sub-network','sub-working','sub-another','sub-motivation'].forEach(function(id){document.getElementById(id).classList.remove('show');});
+    var v=c.dataset.v;
+    if(v==='not_looking') document.getElementById('sub-network').classList.add('show');
+    if(v==='working_conditions') document.getElementById('sub-working').classList.add('show');
+    if(v==='another_candidate') document.getElementById('sub-another').classList.add('show');
+    if(v==='motivation_mismatch') document.getElementById('sub-motivation').classList.add('show');
+    document.getElementById('hm-wrap').style.display=(v==='test_failed')?'block':'none';
+    clearError();
+    document.getElementById('results').innerHTML='<div class="empty-state"><div class="empty-icon">&#9997;&#65039;</div>Обери причину та натисни кнопку</div>';
+  });
+});
+['tone','cand-gender','rec-gender','network-sub','working-sub','another-sub','motivation-sub'].forEach(function(id){
+  var el=document.getElementById(id);if(!el)return;
+  el.querySelectorAll('.chip').forEach(function(c){
+    c.addEventListener('click',function(){
+      if(id!=='tone'&&c.classList.contains('sel')){c.classList.remove('sel');return;}
+      el.querySelectorAll('.chip').forEach(function(x){x.classList.remove('sel');});
+      c.classList.add('sel');
+    });
+  });
+});
+function checkAiFields(){var s=document.getElementById('strengths').value.trim(),g=document.getElementById('growth').value.trim();document.getElementById('ai-badge').classList.toggle('show',!!(s||g));}
+
+function generate(isAI){
+  var reason=getSelected('reason');
+  if(!reason){showError('Обери причину відмови.');return;}
+  if(reason==='test_failed'&&!document.getElementById('hm-comment').value.trim()){showError('Для Test task failed потрібен коментар HM.');return;}
+  clearError();
+  if(isAI){generateAI();return;}
+  var text=buildStatic();
+  if(!text){showError('Помилка генерації. Спробуй ще раз.');return;}
+  renderResult(text,false);
+}
+
+async function generateAI(){
+  var reason=getSelected('reason'),strengths=document.getElementById('strengths').value.trim(),growth=document.getElementById('growth').value.trim(),position=document.getElementById('position').value.trim(),tone=getSelected('tone')||'warm',cg=getSelected('cand-gender'),rg=getSelected('rec-gender');
+  setLoading(true);
+  var base=buildStatic();
+  try{
+    var resp=await fetch('/api/personalize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({base:base,position:position,strengths:strengths,growth:growth,tone:tone,candidateGender:cg,recruiterGender:rg})});
+    var data=await resp.json();
+    if(!resp.ok) throw new Error(data.error||('Помилка сервера '+resp.status));
+    if(!data.text) throw new Error('Порожня відповідь');
+    setLoading(false);renderResult(data.text,true);
+  }catch(e){setLoading(false);showError('Помилка AI: '+e.message+'. Скористайся базовим варіантом або спробуй ще раз.');}
+}
+
+function renderResult(text,isAI){
+  var area=document.getElementById('results');area.innerHTML='';
+  var card=document.createElement('div');card.className='result-card';
+  var head=document.createElement('div');head.className='result-head';
+  var tag=document.createElement('span');tag.className=isAI?'result-tag ai-tag':'result-tag';tag.textContent=isAI?'✦ Персоналізовано з AI':'Базовий варіант';
+  var cid='copy-'+Date.now();
+  var br=document.createElement('div');br.innerHTML='<button class="copy-btn" id="'+cid+'" onclick="doCopy(\''+cid+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Копіювати</button>';
+  head.appendChild(tag);head.appendChild(br);
+  var body=document.createElement('div');body.className='result-body';
+  var pre=document.createElement('div');pre.className='result-text';pre.textContent=text;
+  body.appendChild(pre);card.appendChild(head);card.appendChild(body);area.appendChild(card);
+  window['_copy_'+cid]=text;
+  var reason=getSelected('reason');
+  if(reason!=='toxic'){var mb=document.createElement('button');mb.className='btn-secondary';mb.textContent='Ще варіант';mb.onclick=function(){generate(false);};area.appendChild(mb);}
+  var s=document.getElementById('strengths').value.trim(),g=document.getElementById('growth').value.trim();
+  if((s||g)&&!isAI&&reason!=='toxic'){var ab=document.createElement('button');ab.className='btn-primary';ab.style.marginTop='0';ab.textContent='✦ Персоналізувати з AI';ab.onclick=function(){generateAI();};area.appendChild(ab);}
+  card.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function doCopy(id){var t=window['_copy_'+id];if(!t)return;navigator.clipboard.writeText(t).then(function(){var b=document.getElementById(id);b.textContent='✓ Скопійовано';setTimeout(function(){b.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Копіювати';},2000);});}
+function setLoading(on){document.getElementById('loading-bar').classList.toggle('show',on);document.getElementById('loading-text').style.display=on?'block':'none';if(on)document.getElementById('loading-text').textContent='Персоналізую з AI...';document.getElementById('gen-btn').disabled=on;}
+function showError(msg){var e=document.getElementById('error-box');e.textContent=msg;e.classList.add('show');}
+function clearError(){document.getElementById('error-box').classList.remove('show');}
+
+/* ===== Tabs ===== */
+document.getElementById('tabs').querySelectorAll('.tab-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    document.getElementById('tabs').querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+    document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ===== HM Assistant ===== */
+var chatHistory=[];
+
+function handleChatKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}
+}
+
+document.getElementById('suggest-row').querySelectorAll('.suggest-chip').forEach(function(c){
+  c.addEventListener('click',function(){
+    document.getElementById('chat-input').value=c.dataset.q;
+    sendChat();
+  });
+});
+
+function appendMsg(role,text){
+  var scroll=document.getElementById('chat-scroll');
+  var div=document.createElement('div');
+  div.className='chat-msg '+role;
+  div.textContent=text;
+  scroll.appendChild(div);
+  div.scrollIntoView({behavior:'smooth',block:'end'});
+  return div;
+}
+
+function chatError(msg){var e=document.getElementById('chat-error');e.textContent=msg;e.classList.add('show');}
+function clearChatError(){document.getElementById('chat-error').classList.remove('show');}
+
+async function sendChat(){
+  var input=document.getElementById('chat-input');
+  var q=input.value.trim();
+  if(!q) return;
+  clearChatError();
+  document.getElementById('suggest-row').style.display='none';
+  appendMsg('user',q);
+  chatHistory.push({role:'user',content:q});
+  input.value='';
+  input.style.height='auto';
+  var sendBtn=document.getElementById('chat-send');
+  sendBtn.disabled=true;
+  var pending=appendMsg('assistant','Думаю...');
+  pending.classList.add('pending');
+
+  try{
+    var resp=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:chatHistory})});
+    var data=await resp.json();
+    if(!resp.ok) throw new Error(data.error||('Помилка сервера '+resp.status));
+    if(!data.text) throw new Error('Порожня відповідь');
+    pending.remove();
+    appendMsg('assistant',data.text);
+    chatHistory.push({role:'assistant',content:data.text});
+  }catch(e){
+    pending.remove();
+    chatError('Помилка: '+e.message+'. Спробуй ще раз.');
+    chatHistory.pop();
+  }finally{
+    sendBtn.disabled=false;
+  }
+}
+document.getElementById('chat-input').addEventListener('input',function(){
+  this.style.height='auto';
+  this.style.height=Math.min(this.scrollHeight,140)+'px';
+});
+</script>
+</body>
+</html>
