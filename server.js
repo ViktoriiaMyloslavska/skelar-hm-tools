@@ -87,6 +87,21 @@ app.post('/api/personalize', (req, res) => {
   callAnthropic(sys, [{ role: 'user', content: up }], res);
 });
 
+// Rejection constructor — custom "motivation mismatch: other" reason
+app.post('/api/motivation-other', (req, res) => {
+  const { reason, position, candidateGender, recruiterGender } = req.body;
+  if (!reason) return res.status(400).json({ error: 'Відсутній опис причини.' });
+
+  const sys = 'Ти — SKELAR-рекрутер. Напиши ТІЛЬКИ тіло відмови (середня частина, без привітання і без футера) на основі вказаної причини невідповідності мотивації. Тон — теплий, людяний, без виховного тону. Без markdown. Тільки текст тіла.';
+
+  let up = `Причина невідповідності мотивації: ${reason}`;
+  if (position) up += `\nПозиція: ${position}`;
+  if (candidateGender) up += `\nСтать кандидата: ${candidateGender === 'female' ? 'жінка' : 'чоловік'}`;
+  if (recruiterGender) up += `\nСтать рекрутера: ${recruiterGender === 'female' ? 'жінка' : 'чоловік'}`;
+
+  callAnthropic(sys, [{ role: 'user', content: up }], res);
+});
+
 app.get('/health', (req, res) => res.json({ ok: true, kbLoaded: KB.length > 0 }));
 
 const PORT = process.env.PORT || 3000;
